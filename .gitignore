@@ -1,11 +1,11 @@
 <<<<<<< HEAD
 # Dependencies
 node_modules/
-# frontend/node_modules/
+brainly-frontend/node_modules/
 brainly-backend/node_modules/
 
 # Build output
-# frontend/dist/
+brainly-frontend/dist/
 brainly-backend/dist/
 dist/
 build/
