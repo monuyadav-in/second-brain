@@ -1,5 +1,6 @@
 export interface IconProps {
     size?: "sm" | "md" | "lg";
+    className?: string;
 }
 
 const sizeStyles = {
@@ -8,8 +9,7 @@ const sizeStyles = {
     lg: "size-6",
 };
 
-export const PlusIcon = (props: IconProps) => {
-    const size = props.size || "md";
+export const PlusIcon = ({ size = "md", className = "" }: IconProps) => {
     return (
         <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -17,7 +17,7 @@ export const PlusIcon = (props: IconProps) => {
             viewBox="0 0 24 24"
             strokeWidth="1.5"
             stroke="currentColor"
-            className={sizeStyles[size]}
+            className={`${sizeStyles[size]} ${className}`}
         >
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
         </svg>

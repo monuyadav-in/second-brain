@@ -8,6 +8,7 @@ declare global {
 
 import express from "express";
 import jwt from "jsonwebtoken";
+import cors from "cors";
 import { ContentModel, LinkModel, UserModel } from "./db.js";
 import { JWT_Pass } from "./config.js";
 import { userMiddleware } from "./middleware.js";
@@ -22,6 +23,7 @@ function random(len: number) {
 }
 const app = express();
 app.use(express.json());
+app.use(cors());
 
 app.post("/api/v1/signup", async (req, res) => {
   const { username, password } = req.body;

@@ -1,17 +1,18 @@
 import type { ReactElement } from "react";
+import type { ReactNode } from "react";
 
 export interface ButtonProps {
     variant?: "primary" | "secondary";
     size?: "sm" | "md" | "lg";
     text?: string;
+    type?: "button" | "submit" | "reset";
     startIcon?: ReactElement;
-    startIcons?: ReactElement;
     endIcon?: ReactElement;
-    endIcons?: ReactElement;
     onClick?: () => void;
-    onclick?: () => void;
     fullWidth?: boolean;
     loading?: boolean;
+    className?: string;
+    children?: ReactNode;
 }
 
 const variantStyles: Record<"primary" | "secondary", string> = {
@@ -31,29 +32,28 @@ export const Button = ({
     variant = "primary",
     size = "md",
     text,
+    type = "button",
     startIcon,
-    startIcons,
     endIcon,
-    endIcons,
     onClick,
-    onclick,
     fullWidth = false,
     loading = false,
+    className = "",
+    children,
 }: ButtonProps) => {
-    const iconStart = startIcon || startIcons;
-    const iconEnd = endIcon || endIcons;
-
     return (
         <button
-            onClick={onClick || onclick}
+            onClick={onClick}
             disabled={loading}
+            type={type}
             className={`${variantStyles[variant]} ${sizeStyles[size]} ${defaultStyles} ${
                 fullWidth ? "w-full" : ""
-            } ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
+            } ${loading ? "opacity-50 cursor-not-allowed" : ""} ${className}`}
         >
-            {iconStart && <span className="flex items-center">{iconStart}</span>}
+            {startIcon && <span className="flex items-center">{startIcon}</span>}
             {text && <span>{text}</span>}
-            {iconEnd && <span className="flex items-center">{iconEnd}</span>}
+            {children}
+            {endIcon && <span className="flex items-center">{endIcon}</span>}
         </button>
     );
 };
