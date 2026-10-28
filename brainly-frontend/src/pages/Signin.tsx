@@ -9,7 +9,7 @@ import { BrainIcon } from "../icons/brainIcons";
 export function Signin() {
     const navigate = useNavigate();
 
-    const [username, setUsername] = useState("");
+    const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
 
@@ -19,8 +19,8 @@ export function Signin() {
     async function handleSubmit(e: FormEvent) {
         e.preventDefault();
 
-        if (!username.trim() || !password.trim()) {
-            setError("Please enter your username and password.");
+        if (!email.trim() || !password.trim()) {
+            setError("Please enter your email address and password.");
             return;
         }
 
@@ -29,15 +29,19 @@ export function Signin() {
 
         try {
             const response = await axios.post(`${BACKEND_URL}/api/v1/signin`, {
-                username: username.trim(),
+                email: email.trim().toLowerCase(),
                 password: password.trim(),
             });
 
             const token = response.data?.token;
+            const user = response.data?.user;
 
             if (token) {
                 localStorage.setItem("token", token);
-                localStorage.setItem("username", username.trim());
+                const displayName = user?.firstName || user?.username || email.trim().split("@")[0] || "User";
+                localStorage.setItem("name", displayName);
+                localStorage.setItem("username", displayName);
+                if (user?.email) localStorage.setItem("email", user.email);
                 navigate("/dashboard");
             } else {
                 setError("Authentication failed: No token returned from server.");
@@ -48,7 +52,7 @@ export function Signin() {
                 err.response?.data?.message ||
                 (err.code === "ERR_NETWORK"
                     ? "Cannot connect to Brainly backend. Please ensure the backend is running on port 3000."
-                    : "Invalid credentials. Please verify your username and password.");
+                    : "Invalid credentials. Please verify your email and password.");
             setError(errorMsg);
         } finally {
             setLoading(false);
@@ -85,13 +89,13 @@ export function Signin() {
                 <form onSubmit={handleSubmit} className="space-y-5">
                     <div>
                         <Input
-                            label="Username"
-                            id="signin-username"
-                            type="text"
-                            value={username}
-                            onChange={(e) => setUsername(e.target.value)}
-                            placeholder="Enter your username"
-                            autoComplete="username"
+                            label="Email Address"
+                            id="signin-email"
+                            type="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            placeholder="name@example.com"
+                            autoComplete="email"
                             required
                         />
                     </div>
@@ -111,7 +115,7 @@ export function Signin() {
                             <button
                                 type="button"
                                 onClick={() => setShowPassword(!showPassword)}
-                                className="absolute right-3.5 top-[35px] text-xs font-medium text-gray-500 hover:text-gray-800 transition-colors"
+                                className="absolute right-3.5 top-[35px] text-xs font-medium text-gray-500 hover:text-gray-800 transition-colors cursor-pointer"
                             >
                                 {showPassword ? "Hide" : "Show"}
                             </button>

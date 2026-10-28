@@ -7,3 +7,19 @@
     --color-purple-600: #5046e4;
     --color-purple-700: #4338ca;
 }
+
+/* Sleek custom scrollbar for cards and scrollable containers */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(156, 163, 175, 0.4);
+    border-radius: 9999px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(107, 114, 128, 0.6);
+}

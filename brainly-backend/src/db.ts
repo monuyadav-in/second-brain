@@ -6,20 +6,24 @@ mongoose.connect("mongodb://127.0.0.1:27017/second-brain")
 
 
 const UserSchema = new Schema({
-    username: { type: String, unique: true },
-    password: { type: String }
+    firstName: { type: String },
+    lastName: { type: String },
+    email: { type: String, unique: true, sparse: true },
+    username: { type: String, sparse: true },
+    password: { type: String, required: true }
 });
 
 export const UserModel = model("User", UserSchema);
 
 
 const UserContent = new Schema({
-    title: String,
-    link: String,
-    tags: [{type: mongoose.Types.ObjectId, ref: 'Tag'}],
-    userId: {type: mongoose.Types.ObjectId, ref: 'User', required: true}
-})
-export const ContentModel = model("Content", UserContent)
+    title: { type: String, required: true },
+    link: { type: String, required: true },
+    type: { type: String, default: "Link" },
+    tags: [{ type: String }],
+    userId: { type: mongoose.Types.ObjectId, ref: 'User', required: true }
+});
+export const ContentModel = model("Content", UserContent);
 
 const LinkSchema = new Schema({
     hash: { type: String, required: true },

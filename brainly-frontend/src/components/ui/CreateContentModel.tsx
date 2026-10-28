@@ -1,12 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "./Button";
 
-type ContentType = "YouTube" | "Twitter" | "Document" | "Link";
+export type ContentType = "YouTube" | "Twitter" | "Document" | "Link";
 
 interface CreateContentModalProps {
     open: boolean;
     onClose: () => void;
     onSubmit?: (content: { title: string; link: string; type: ContentType; tags: string[] }) => void;
+    defaultType?: ContentType;
 }
 
 const TYPE_OPTIONS: { value: ContentType; label: string; emoji: string }[] = [
@@ -16,11 +17,18 @@ const TYPE_OPTIONS: { value: ContentType; label: string; emoji: string }[] = [
     { value: "Link", label: "Link", emoji: "🔗" },
 ];
 
-export function CreateContentModal({ open, onClose, onSubmit }: CreateContentModalProps) {
+export function CreateContentModal({ open, onClose, onSubmit, defaultType = "YouTube" }: CreateContentModalProps) {
     const [title, setTitle] = useState("");
     const [link, setLink] = useState("");
-    const [type, setType] = useState<ContentType>("YouTube");
+    const [type, setType] = useState<ContentType>(defaultType);
     const [tags, setTags] = useState("");
+
+    // Auto-select type based on active sidebar tab when modal opens
+    useEffect(() => {
+        if (open) {
+            setType(defaultType);
+        }
+    }, [open, defaultType]);
 
     if (!open) return null;
 
@@ -34,7 +42,7 @@ export function CreateContentModal({ open, onClose, onSubmit }: CreateContentMod
     function handleClose() {
         setTitle("");
         setLink("");
-        setType("YouTube");
+        setType(defaultType);
         setTags("");
         onClose();
     }
@@ -55,7 +63,12 @@ export function CreateContentModal({ open, onClose, onSubmit }: CreateContentMod
                 >
                     {/* Modal Header */}
                     <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-gray-100">
-                        <h2 className="text-lg font-bold text-gray-900">Add Content</h2>
+                        <div className="flex items-center gap-2">
+                            <h2 className="text-lg font-bold text-gray-900">Add Content</h2>
+                            <span className="text-xs px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 font-semibold">
+                                {type}
+                            </span>
+                        </div>
                         <button
                             type="button"
                             onClick={handleClose}

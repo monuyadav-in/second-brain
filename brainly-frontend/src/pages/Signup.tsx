@@ -9,7 +9,9 @@ import { BrainIcon } from "../icons/brainIcons";
 export function Signup() {
     const navigate = useNavigate();
 
-    const [username, setUsername] = useState("");
+    const [firstName, setFirstName] = useState("");
+    const [lastName, setLastName] = useState("");
+    const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
 
@@ -20,8 +22,13 @@ export function Signup() {
     async function handleSubmit(e: FormEvent) {
         e.preventDefault();
 
-        if (!username.trim() || !password.trim()) {
-            setError("Username and password are required.");
+        if (!firstName.trim()) {
+            setError("Please enter your first name.");
+            return;
+        }
+
+        if (!email.trim() || !password.trim()) {
+            setError("Email address and password are required.");
             return;
         }
 
@@ -31,11 +38,13 @@ export function Signup() {
 
         try {
             const response = await axios.post(`${BACKEND_URL}/api/v1/signup`, {
-                username: username.trim(),
+                firstName: firstName.trim(),
+                lastName: lastName.trim(),
+                email: email.trim().toLowerCase(),
                 password: password.trim(),
             });
 
-            const msg = response.data?.message || "User signed up successfully!";
+            const msg = response.data?.message || "Account created successfully!";
             setSuccess(`${msg} Redirecting to sign in...`);
 
             setTimeout(() => {
@@ -46,8 +55,8 @@ export function Signup() {
             const errorMsg =
                 err.response?.data?.message ||
                 (err.code === "ERR_NETWORK"
-                    ? "Cannot connect to Brainly backend. Please ensure backend is running on port 3000."
-                    : "Signup failed. Please try a different username.");
+                    ? "Cannot connect to Brainly backend. Please ensure the backend is running on port 3000."
+                    : "Signup failed. An account with this email may already exist.");
             setError(errorMsg);
         } finally {
             setLoading(false);
@@ -90,16 +99,42 @@ export function Signup() {
                 )}
 
                 {/* Signup Form */}
-                <form onSubmit={handleSubmit} className="space-y-5">
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="grid grid-cols-2 gap-3">
+                        <div>
+                            <Input
+                                label="First Name"
+                                id="signup-firstname"
+                                type="text"
+                                value={firstName}
+                                onChange={(e) => setFirstName(e.target.value)}
+                                placeholder="e.g. John"
+                                autoComplete="given-name"
+                                required
+                            />
+                        </div>
+                        <div>
+                            <Input
+                                label="Last Name"
+                                id="signup-lastname"
+                                type="text"
+                                value={lastName}
+                                onChange={(e) => setLastName(e.target.value)}
+                                placeholder="e.g. Doe"
+                                autoComplete="family-name"
+                            />
+                        </div>
+                    </div>
+
                     <div>
                         <Input
-                            label="Username"
-                            id="signup-username"
-                            type="text"
-                            value={username}
-                            onChange={(e) => setUsername(e.target.value)}
-                            placeholder="e.g. monuyadav"
-                            autoComplete="username"
+                            label="Email Address"
+                            id="signup-email"
+                            type="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            placeholder="name@example.com"
+                            autoComplete="email"
                             required
                         />
                     </div>
@@ -119,7 +154,7 @@ export function Signup() {
                             <button
                                 type="button"
                                 onClick={() => setShowPassword(!showPassword)}
-                                className="absolute right-3.5 top-[35px] text-xs font-medium text-gray-500 hover:text-gray-800 transition-colors"
+                                className="absolute right-3.5 top-[35px] text-xs font-medium text-gray-500 hover:text-gray-800 transition-colors cursor-pointer"
                             >
                                 {showPassword ? "Hide" : "Show"}
                             </button>

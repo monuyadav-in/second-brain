@@ -26,24 +26,56 @@ app.use(express.json());
 app.use(cors());
 
 app.post("/api/v1/signup", async (req, res) => {
-  const { username, password } = req.body;
+  const { firstName, lastName, email, username, password } = req.body;
+  const userEmail = (email || username || "").toLowerCase().trim();
+  const fallbackUsername = username || (userEmail ? userEmail.split("@")[0] : `${firstName || ""}${lastName || ""}`);
+
+  if (!userEmail || !password) {
+    return res.status(400).json({ message: "Email and password are required" });
+  }
+
   try {
-    await UserModel.create({
-      username,
+    const existing = await UserModel.findOne({
+      $or: [{ email: userEmail }, { username: fallbackUsername }],
+    });
+    if (existing) {
+      return res.status(409).json({ message: "An account with this email already exists" });
+    }
+
+    const newUser = await UserModel.create({
+      firstName: firstName?.trim(),
+      lastName: lastName?.trim(),
+      email: userEmail,
+      username: fallbackUsername,
       password,
     });
-    res.json({ message: "User signed up successfully" });
+
+    return res.json({
+      message: "User signed up successfully",
+      user: {
+        id: newUser._id,
+        firstName: newUser.firstName,
+        lastName: newUser.lastName,
+        email: newUser.email,
+      },
+    });
   } catch (e) {
-    res.status(409).json({ message: "User already exists or invalid data" });
+    console.error("Signup error:", e);
+    return res.status(409).json({ message: "User already exists or invalid data" });
   }
 });
 
 app.post("/api/v1/signin", async (req, res) => {
   try {
-    const { username, password } = req.body;
+    const { email, username, password } = req.body;
+    const identifier = (email || username || "").toLowerCase().trim();
+
+    if (!identifier || !password) {
+      return res.status(400).json({ message: "Email and password are required" });
+    }
 
     const existingUser = await UserModel.findOne({
-      username,
+      $or: [{ email: identifier }, { username: identifier }],
       password,
     });
 
@@ -54,11 +86,21 @@ app.post("/api/v1/signin", async (req, res) => {
         },
         JWT_Pass,
       );
-      res.json({
+
+      const displayName = existingUser.firstName || existingUser.username || existingUser.email?.split("@")[0] || "User";
+
+      return res.json({
         token,
+        user: {
+          id: existingUser._id,
+          firstName: existingUser.firstName,
+          lastName: existingUser.lastName,
+          email: existingUser.email,
+          username: displayName,
+        },
       });
     } else {
-      res.status(403).json({
+      return res.status(403).json({
         message: "Incorrect Credentials",
       });
     }
@@ -72,8 +114,7 @@ app.post("/api/v1/signin", async (req, res) => {
 
 app.post("/api/v1/content", userMiddleware, async (req, res) => {
   try {
-    const link = req.body.link;
-    const title = req.body.title;
+    const { link, title, type, tags } = req.body;
 
     if (!link || !title) {
       return res.status(400).json({
@@ -87,15 +128,17 @@ app.post("/api/v1/content", userMiddleware, async (req, res) => {
       });
     }
 
-    await ContentModel.create({
+    const newContent = await ContentModel.create({
       link,
       title,
+      type: type || "Link",
       userId: req.userId,
-      tags: [],
+      tags: Array.isArray(tags) ? tags : [],
     });
 
     return res.json({
       message: "Content added successfully",
+      content: newContent,
     });
   } catch (error) {
     console.error("Error adding content:", error);
@@ -129,9 +172,56 @@ app.get("/api/v1/content", userMiddleware, async (req, res) => {
   }
 });
 
-app.delete("/api/v1/content", userMiddleware, async (req, res) => {
+app.put(["/api/v1/content", "/api/v1/content/:id"], userMiddleware, async (req, res) => {
   try {
-    const contentId = req.body.contentId;
+    const contentId = req.params.id || req.body?.contentId || req.body?._id;
+    const { title, link, type, tags } = req.body;
+
+    if (!contentId) {
+      return res.status(400).json({
+        message: "contentId is required",
+      });
+    }
+
+    if (!req.userId) {
+      return res.status(403).json({
+        message: "Unauthorized",
+      });
+    }
+
+    const updateData: Record<string, any> = {};
+    if (title !== undefined) updateData.title = title;
+    if (link !== undefined) updateData.link = link;
+    if (type !== undefined) updateData.type = type;
+    if (tags !== undefined) updateData.tags = Array.isArray(tags) ? tags : [];
+
+    const updated = await ContentModel.findOneAndUpdate(
+      { _id: contentId, userId: req.userId },
+      { $set: updateData },
+      { new: true }
+    );
+
+    if (!updated) {
+      return res.status(404).json({
+        message: "Content not found or unauthorized to update",
+      });
+    }
+
+    return res.json({
+      message: "Content updated successfully",
+      content: updated,
+    });
+  } catch (error) {
+    console.error("Error updating content:", error);
+    return res.status(500).json({
+      message: "Internal server error",
+    });
+  }
+});
+
+app.delete(["/api/v1/content", "/api/v1/content/:id"], userMiddleware, async (req, res) => {
+  try {
+    const contentId = req.params.id || req.body?.contentId || req.query?.contentId;
     if (!contentId) {
       return res.status(400).json({
         message: "contentId is required",

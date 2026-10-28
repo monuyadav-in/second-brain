@@ -7,6 +7,7 @@ export interface SidebarItemProps {
     onClick?: () => void;
     badge?: string | number;
     className?: string;
+    collapsed?: boolean;
 }
 
 export function SidebarItem({
@@ -16,18 +17,22 @@ export function SidebarItem({
     onClick,
     badge,
     className = "",
+    collapsed = false,
 }: SidebarItemProps) {
     return (
         <button
             type="button"
             onClick={onClick}
-            className={`group w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 cursor-pointer outline-none select-none text-left ${
+            title={collapsed ? `${text}${badge !== undefined ? ` (${badge})` : ""}` : undefined}
+            className={`group w-full flex items-center ${
+                collapsed ? "justify-center px-2 py-2.5" : "justify-between px-3.5 py-2.5"
+            } rounded-xl text-sm font-medium transition-all duration-200 cursor-pointer outline-none select-none text-left relative ${
                 selected
-                    ? "bg-purple-100/70 text-purple-700 font-semibold shadow-xs"
+                    ? "bg-purple-100/80 text-purple-700 font-semibold shadow-xs"
                     : "text-gray-600 hover:text-gray-900 hover:bg-gray-100/80 active:bg-gray-200/70"
             } ${className}`}
         >
-            <div className="flex items-center gap-3 min-w-0">
+            <div className={`flex items-center gap-3 min-w-0 ${collapsed ? "justify-center" : ""}`}>
                 <span
                     className={`flex items-center justify-center shrink-0 transition-colors duration-200 ${
                         selected ? "text-purple-600" : "text-gray-500 group-hover:text-gray-800"
@@ -35,10 +40,10 @@ export function SidebarItem({
                 >
                     {icon}
                 </span>
-                <span className="truncate">{text}</span>
+                {!collapsed && <span className="truncate">{text}</span>}
             </div>
 
-            {badge !== undefined ? (
+            {!collapsed && badge !== undefined ? (
                 <span
                     className={`text-xs px-2 py-0.5 rounded-full font-medium transition-colors shrink-0 ${
                         selected
@@ -48,9 +53,14 @@ export function SidebarItem({
                 >
                     {badge}
                 </span>
-            ) : selected ? (
+            ) : !collapsed && selected ? (
                 <span className="w-1.5 h-1.5 rounded-full bg-purple-600 shrink-0" />
             ) : null}
+
+            {/* In collapsed mode, indicate active item with a small indicator dot */}
+            {collapsed && selected && (
+                <span className="absolute right-1.5 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-purple-600" />
+            )}
         </button>
     );
 }
